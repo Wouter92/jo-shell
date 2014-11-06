@@ -4,7 +4,7 @@ MANPAGE_INSTALL_DIR     = /usr/local/share/man/man1
 CC                      = gcc
 CFLAGS                  = -g
 LIBS                    = -lreadline
-LN                      = $(CC) $(CFLAGS) jsh-common.o jsh.o alias.o -o jsh $(LIBS)
+LN                      = $(CC) $(CFLAGS) jsh-common.o jsh.o alias.o env.o -o jsh $(LIBS)
 
 ECHO_LIBS               = echo "Linking jsh with the following libraries: $(LIBS) "
 
@@ -17,13 +17,15 @@ else # try to link jsh with the readline library (and curses or termcap if neede
 	(($(ECHO_LIBS) "termcap"); $(LN) -termcap) || (echo "Failed linking jsh: all known fallback libraries were tried"))
 endif
 
-all: jsh-common alias jsh link
+all: jsh-common alias env jsh link
 	@echo "-------- Compiling all done --------"
 
 jsh-common: jsh-common.c jsh-common.h
 	$(CC) $(CFLAGS) -c jsh-common.c -o jsh-common.o
 alias: alias.c alias.h jsh-common.h
 	$(CC) $(CFLAGS) -c alias.c -o alias.o
+env: env.c env.h 
+	$(CC) $(CFLAGS) -c env.c -o env.o
 jsh: jsh-parse.c jsh.c jsh-common.h
 	$(CC) $(CFLAGS) -c jsh.c -o jsh.o
 link: jsh-common.o jsh.o alias.o

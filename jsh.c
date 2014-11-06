@@ -19,6 +19,7 @@
 
 #include "jsh-common.h"
 #include "alias.h"
+#include "env.h"
 #include "jsh-parse.c"
 #include <signal.h>
 #include <setjmp.h>
@@ -60,9 +61,9 @@ int MAX_DIR_LENGTH = 25;        // the maximum length of an expanded pwd substri
  * built_in enum = value corresponds to index in built_ins[]
  */
 const char *built_ins[] = {"", "F", "T", "alias", "cd", "color", "debug",\
-"exit", "history", "prompt", "shcat", "unalias"};
+"exit", "history", "prompt", "setenv", "shcat", "unalias", "unsetenv"};
 #define nb_built_ins (sizeof(built_ins)/sizeof(built_ins[0]))
-enum built_in {EMPTY, F, T, ALIAS, CD, CLR, DBG, EXIT, HIST, PROMPT, SHCAT, UNALIAS};
+enum built_in {EMPTY, F, T, ALIAS, CD, CLR, DBG, EXIT, HIST, PROMPT, SETENV, SHCAT, UNALIAS, UNSETENV};
 typedef enum built_in built_in;
 
 /*
@@ -384,6 +385,10 @@ char *readcmd(int status) {
         char *ret = resolvealiases(buf);
         free(buf); // free unresolved version
         buf = ret; // point to resolved cmd
+
+	    char *envresolved = resolveenvvars(buf);
+        free(buf);
+        buf = envresolved;
     }
     return buf;
 }
@@ -512,6 +517,14 @@ int parse_built_in(comd *comd, int index) {
         case UNALIAS:
             CHK_ARGC("unalias", 1);
             return unalias(comd->cmd[1]);
+            break;
+        case SETENV:
+            CHK_ARGC("setenv", 2);
+            return setenv(comd->cmd[1],comd->cmd[2],true);
+            break;
+        case UNSETENV:
+            CHK_ARGC("unsetenv", 1);
+            return unsetenv(comd->cmd[1]);
             break;
         default:
             printerr("parse_built_in: unrecognized built_in command: '%s' with index %d", *comd->cmd, index);
